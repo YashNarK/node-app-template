@@ -14,3 +14,13 @@ body {
   color: #fff;
   background-color: #000;
 }
+#username_or_email{
+  width: 50%;
+  margin:auto;
+}
+
+.user_details{
+  text-align: end;
+  padding-right: 20px;
+  
+}

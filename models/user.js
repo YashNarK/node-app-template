@@ -8,13 +8,18 @@ import {validPassword,genPassword} from "../common/utils.js"
 import passport from "passport";
 import passportLocal from "passport-local";
 
+// Oauth imports
+import passportGoogleOauth2 from "passport-google-oauth20";
+
+
 // app imports
 
 // load env variables
 dotenv.config();
 // initialize express app & others
 const app = express();
-const localStrategy = passportLocal.Strategy;
+const LocalStrategy = passportLocal.Strategy;
+const GoogleStrategy = passportGoogleOauth2.Strategy;
 
 // auth middlewares
 
@@ -38,6 +43,7 @@ const userSchema = new mongoose.Schema({
     // for retrieving in password validation. cannot be set by users.
     salt: String,
     hash:String,
+    googleId:{type:String,unique: ()=>this.googleId !== null && this.googleId !== undefined},
     
         
 })
@@ -57,7 +63,7 @@ const User = new mongoose.model("User",userSchema);
 
 // LETS DEFINE A CUSTOM STRATEGY FOR USERNAME_OR_EMAIL + PASSWORD AUTH
 passport.use('login',
-    new localStrategy(
+    new LocalStrategy(
         {usernameField:"username_or_email",passwordField:"password"},
         async (username_or_email,password,done)=>{
         try{
@@ -79,6 +85,22 @@ passport.use('login',
         }
     })
 )
+
+// GOOGLE AUTH STRATEGY
+// passport.use (new GoogleStrategy(
+//     {
+//     clientID:process.env.GOOGLE_CLIENT_ID,
+//     clientSecret:process.env.GOOGLE_CLIENT_SECRET,
+//     callbackURL:"http://localhost:3000/auth/google/callback",
+//     passReqToCallback:true,
+//     userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
+//     },
+//     (request,accessToken,refreshToken,profile,email,done)=>{
+//         console.log(email.email)
+
+//     }
+// ))
+
 passport.serializeUser((user,done)=>{
     done(null,user);
 })
@@ -137,6 +159,17 @@ export async function createUser(username,email,password){
 
 
 // READ
+// READ ALL USERS
+export async function readAllUser(){
+    try{
+        const userList = await User.find({},{username:1,email:1,_id:0});
+        return userList;
+    }
+    catch(ex){
+        return {error:ex.message}
+    }
+}
+
 // READ USER BY USERNAME OR EMAIL
 export async function readUser(searchKey){
     try{
